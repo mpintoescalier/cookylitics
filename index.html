@@ -1,0 +1,35 @@
+<!doctype html>
+<html lang="es">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Cookylitics</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="./vendor/babel.min.js"></script>
+    <script type="importmap">
+      {
+        "imports": {
+          "react": "https://esm.sh/react@18.3.1",
+          "react-dom": "https://esm.sh/react-dom@18.3.1",
+          "react-dom/client": "https://esm.sh/react-dom@18.3.1/client",
+          "recharts": "https://esm.sh/recharts@2.15.0?external=react,react-dom",
+          "lucide-react": "https://esm.sh/lucide-react@0.468.0?external=react"
+        }
+      }
+    </script>
+  </head>
+  <body class="bg-[#0a0b10]">
+    <div id="root"></div>
+    <pre id="boot-error" style="position:fixed;inset:12px;z-index:9999;display:none;white-space:pre-wrap;border:1px solid #ef4444;background:#1f1010;color:#fecaca;padding:16px;font:14px/1.4 ui-monospace,monospace"></pre>
+    <script>
+      const bootError = document.getElementById("boot-error");
+      function showBootError(message) {
+        bootError.style.display = "block";
+        bootError.textContent = String(message);
+      }
+      window.addEventListener("error", (event) => showBootError(event.error?.stack || event.message));
+      window.addEventListener("unhandledrejection", (event) => showBootError(event.reason?.stack || event.reason));
+    </script>
+    <script type="text/babel" data-type="module" data-presets="react" src="./src/app.jsx"></script>
+  </body>
+</html>
