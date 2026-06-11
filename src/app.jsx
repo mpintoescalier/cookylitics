@@ -54,6 +54,17 @@ const screens = [
   { id: "settings", label: "Configuración", icon: Settings },
 ];
 
+const usabilityTasks = [
+  { title: "Registrá una nueva receta completa", description: "Querés habilitar el cálculo automático de materia prima. Registrá una nueva receta con ingredientes, cantidades y proceso de preparación." },
+  { title: "Encontrá la vista general del negocio", description: "Encontrá la información general más importante sobre el desempeño actual del restaurante." },
+  { title: "Consultá los indicadores semanales", description: "Querés saber cómo viene la semana del restaurante. Encontrá los indicadores correspondientes a esta semana." },
+  { title: "Identificá el stock que requiere atención", description: "Verificá si hay ingredientes con bajo stock que puedan generar problemas durante los próximos días." },
+  { title: "Estimá la demanda de la próxima semana", description: "La próxima semana habrá un fin de semana largo y un partido importante. Estimá la demanda esperada considerando ambos eventos." },
+  { title: "Consultá registros anteriores de demanda", description: "Querés comparar la demanda estimada con períodos anteriores. Encontrá registros previos de demanda." },
+  { title: "Revisá los eventos de una predicción", description: "Hace unos días calculaste una predicción con eventos especiales. Verificá qué eventos se utilizaron." },
+  { title: "Corregí una receta existente", description: "Detectaste una cantidad incorrecta en una receta ya cargada. Corregí la información y guardá el cambio." },
+];
+
 const monthlyData = [
   { month: "Ene", ingresos: 44500, costos: 27200, pedidos: 3920, desperdicio: 5.8, margen: 38.9 },
   { month: "Feb", ingresos: 51200, costos: 29900, pedidos: 4210, desperdicio: 5.2, margen: 41.6 },
@@ -1115,6 +1126,36 @@ function ReportModal({ onClose, historyRows }) {
   return <Modal title="Reporte IA generado" onClose={onClose} footer={<div className="grid grid-cols-2 gap-3"><button onClick={onClose} className="h-12 rounded-2xl border border-white/[0.08] bg-white/[0.035] font-black text-white">Cerrar reporte</button><button onClick={() => window.alert("Descarga de reporte disponible próximamente")} className="inline-flex h-12 items-center justify-center gap-2 rounded-2xl bg-gradient-to-r from-[#7c4dff] to-[#18d4ef] font-black text-white"><Download className="h-4 w-4" /> Descargar</button></div>}><div className="space-y-4"><div className="rounded-2xl border border-[#7c4dff]/20 bg-[#7c4dff]/10 p-5"><p className="text-sm font-bold uppercase tracking-[0.18em] text-[#b49aff]">Resumen ejecutivo</p><h4 className="mt-2 text-2xl font-black text-white">Semana con demanda alta y stock controlable</h4><p className="mt-3 text-slate-400">La IA recomienda reforzar mozzarella, revisar eventos activos y monitorear insumos en camino.</p></div><div className="grid grid-cols-3 gap-3"><MetricMini label="Venta estimada" value="$67,420" /><MetricMini label="Costo" value="$36,600" /><MetricMini label="Ganancia pura" value="$30,820" /></div>{historyRows.slice(0, 3).map((row) => <div key={row.action} className="rounded-2xl bg-white/[0.035] p-4"><p className="font-black text-white">{row.action}</p><p className="mt-1 text-sm text-slate-400">{row.result} · {row.impact}</p></div>)}</div></Modal>;
 }
 
+function UsabilityGuide() {
+  const [taskIndex, setTaskIndex] = useState(0);
+  const [taskStartedAt, setTaskStartedAt] = useState(Date.now());
+  const [durations, setDurations] = useState([]);
+  const finished = taskIndex >= usabilityTasks.length;
+  const task = usabilityTasks[taskIndex];
+
+  function completeTask() {
+    const nextDurations = [...durations, Math.max(1, Math.round((Date.now() - taskStartedAt) / 1000))];
+    setDurations(nextDurations);
+    setTaskIndex((current) => current + 1);
+    setTaskStartedAt(Date.now());
+    window.localStorage.setItem("cookylitics-usability-results", JSON.stringify(nextDurations));
+  }
+
+  return <aside className="fixed bottom-5 right-5 z-[80] w-[min(430px,calc(100vw-40px))] rounded-3xl border border-[#8f63ff]/45 bg-[#101118]/95 p-5 shadow-2xl shadow-black/60 backdrop-blur-xl">
+    {finished ? <div>
+      <p className="text-xs font-black uppercase tracking-[0.18em] text-emerald-300">Prueba completada</p>
+      <h2 className="mt-2 text-2xl font-black text-white">Gracias por completar las 8 tareas</h2>
+      <div className="mt-4 grid grid-cols-4 gap-2">{durations.map((seconds, index) => <div key={index} className="rounded-xl bg-white/[0.055] p-2 text-center"><p className="text-xs text-slate-500">T{index + 1}</p><p className="font-black text-white">{seconds}s</p></div>)}</div>
+      <p className="mt-4 text-sm text-slate-400">Volvé a la pestaña de Maze para finalizar y enviar tu sesión.</p>
+    </div> : <div>
+      <div className="mb-3 flex items-center justify-between gap-3"><span className="rounded-full bg-[#7c4dff]/20 px-3 py-1 text-xs font-black text-[#c4b1ff]">Tarea {taskIndex + 1} de {usabilityTasks.length}</span><span className="text-xs font-bold text-slate-500">Realizala sin ayuda</span></div>
+      <h2 className="text-xl font-black text-white">{task.title}</h2>
+      <p className="mt-2 text-sm leading-relaxed text-slate-300">{task.description}</p>
+      <button onClick={completeTask} className="mt-4 h-12 w-full rounded-2xl bg-gradient-to-r from-[#7c4dff] to-[#18d4ef] font-black text-white">Tarea completada, continuar</button>
+    </div>}
+  </aside>;
+}
+
 export default function CookyliticsApp() {
   const urlParams = new URLSearchParams(window.location.search);
   const requestedScreen = urlParams.get("screen");
@@ -1164,7 +1205,7 @@ export default function CookyliticsApp() {
     settings: <SettingsPage profile={profile} setProfile={setProfile} settings={settings} setSettings={setSettings} showToast={showToast} addHistory={addHistory} />,
   };
 
-  return <div className="min-h-screen overflow-hidden bg-[#0a0b10] font-sans text-white"><div className="pointer-events-none fixed inset-0 opacity-80"><div className="absolute left-[15%] top-[-18%] h-[440px] w-[440px] rounded-full bg-[#7c4dff]/18 blur-[110px]" /><div className="absolute bottom-[-20%] right-[-10%] h-[520px] w-[520px] rounded-full bg-[#18d4ef]/12 blur-[120px]" /><div className="absolute inset-0 bg-[radial-gradient(circle_at_1px_1px,rgba(255,255,255,.045)_1px,transparent_0)] [background-size:28px_28px]" /></div><Sidebar currentScreen={currentScreen} setCurrentScreen={setCurrentScreen} /><Topbar searchTerm={searchTerm} setSearchTerm={setSearchTerm} setCurrentScreen={setCurrentScreen} notifications={notifications} onNotificationClick={notificationClick} /><main className="relative px-5 pb-10 pt-9 lg:pl-[316px] lg:pr-8"><div className="mx-auto max-w-[1230px]"><div className="mb-5 flex gap-2 overflow-x-auto lg:hidden">{screens.map(({ id, label }) => <button key={id} onClick={() => setCurrentScreen(id)} className={`shrink-0 rounded-2xl px-4 py-2 font-bold ${currentScreen === id ? "bg-[#7c4dff] text-white" : "bg-[#17181d] text-slate-400"}`}>{label}</button>)}</div>{pages[currentScreen]}</div></main>{modal?.type === "report" && <ReportModal onClose={() => setModal(null)} historyRows={historyRows} />}{modal?.type === "stock" && <StockModal item={modal.item} onClose={() => setModal(null)} onSave={saveStockItem} />}{modal?.type === "recipe" && <RecipeModal recipe={modal.recipe} mode={modal.mode} onClose={() => setModal(null)} onSave={saveRecipe} />}{modal?.type === "event" && <EventModal event={modal.event} onClose={() => setModal(null)} onSave={saveEvent} />}{modal?.type === "history" && <HistoryDetailModal row={modal.row} onClose={() => setModal(null)} />}<Toast message={toast} /></div>;
+  return <div className="min-h-screen overflow-hidden bg-[#0a0b10] font-sans text-white"><div className="pointer-events-none fixed inset-0 opacity-80"><div className="absolute left-[15%] top-[-18%] h-[440px] w-[440px] rounded-full bg-[#7c4dff]/18 blur-[110px]" /><div className="absolute bottom-[-20%] right-[-10%] h-[520px] w-[520px] rounded-full bg-[#18d4ef]/12 blur-[120px]" /><div className="absolute inset-0 bg-[radial-gradient(circle_at_1px_1px,rgba(255,255,255,.045)_1px,transparent_0)] [background-size:28px_28px]" /></div><Sidebar currentScreen={currentScreen} setCurrentScreen={setCurrentScreen} /><Topbar searchTerm={searchTerm} setSearchTerm={setSearchTerm} setCurrentScreen={setCurrentScreen} notifications={notifications} onNotificationClick={notificationClick} /><main className="relative px-5 pb-10 pt-9 lg:pl-[316px] lg:pr-8"><div className="mx-auto max-w-[1230px]"><div className="mb-5 flex gap-2 overflow-x-auto lg:hidden">{screens.map(({ id, label }) => <button key={id} onClick={() => setCurrentScreen(id)} className={`shrink-0 rounded-2xl px-4 py-2 font-bold ${currentScreen === id ? "bg-[#7c4dff] text-white" : "bg-[#17181d] text-slate-400"}`}>{label}</button>)}</div>{pages[currentScreen]}</div></main>{modal?.type === "report" && <ReportModal onClose={() => setModal(null)} historyRows={historyRows} />}{modal?.type === "stock" && <StockModal item={modal.item} onClose={() => setModal(null)} onSave={saveStockItem} />}{modal?.type === "recipe" && <RecipeModal recipe={modal.recipe} mode={modal.mode} onClose={() => setModal(null)} onSave={saveRecipe} />}{modal?.type === "event" && <EventModal event={modal.event} onClose={() => setModal(null)} onSave={saveEvent} />}{modal?.type === "history" && <HistoryDetailModal row={modal.row} onClose={() => setModal(null)} />}{urlParams.get("usability") === "1" && <UsabilityGuide />}<Toast message={toast} /></div>;
 }
 
 
