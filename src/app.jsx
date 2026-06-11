@@ -1128,31 +1128,54 @@ function ReportModal({ onClose, historyRows }) {
 
 function UsabilityGuide() {
   const [taskIndex, setTaskIndex] = useState(0);
+  const [phase, setPhase] = useState("intro");
   const [taskStartedAt, setTaskStartedAt] = useState(Date.now());
   const [durations, setDurations] = useState([]);
   const finished = taskIndex >= usabilityTasks.length;
   const task = usabilityTasks[taskIndex];
 
+  function startTask() {
+    setTaskStartedAt(Date.now());
+    setPhase("task");
+  }
+
   function completeTask() {
     const nextDurations = [...durations, Math.max(1, Math.round((Date.now() - taskStartedAt) / 1000))];
     setDurations(nextDurations);
     setTaskIndex((current) => current + 1);
-    setTaskStartedAt(Date.now());
+    setPhase("intro");
     window.localStorage.setItem("cookylitics-usability-results", JSON.stringify(nextDurations));
   }
 
-  return <aside className="fixed bottom-5 right-5 z-[80] w-[min(430px,calc(100vw-40px))] rounded-3xl border border-[#8f63ff]/45 bg-[#101118]/95 p-5 shadow-2xl shadow-black/60 backdrop-blur-xl">
-    {finished ? <div>
+  if (finished) return <div className="fixed inset-0 z-[100] grid place-items-center overflow-y-auto bg-[#080910] p-5">
+    <div className="w-full max-w-2xl rounded-[32px] border border-emerald-400/25 bg-[#101118] p-6 text-center shadow-2xl md:p-10">
       <p className="text-xs font-black uppercase tracking-[0.18em] text-emerald-300">Prueba completada</p>
-      <h2 className="mt-2 text-2xl font-black text-white">Gracias por completar las 8 tareas</h2>
-      <div className="mt-4 grid grid-cols-4 gap-2">{durations.map((seconds, index) => <div key={index} className="rounded-xl bg-white/[0.055] p-2 text-center"><p className="text-xs text-slate-500">T{index + 1}</p><p className="font-black text-white">{seconds}s</p></div>)}</div>
-      <p className="mt-4 text-sm text-slate-400">Volvé a la pestaña de Maze para finalizar y enviar tu sesión.</p>
-    </div> : <div>
-      <div className="mb-3 flex items-center justify-between gap-3"><span className="rounded-full bg-[#7c4dff]/20 px-3 py-1 text-xs font-black text-[#c4b1ff]">Tarea {taskIndex + 1} de {usabilityTasks.length}</span><span className="text-xs font-bold text-slate-500">Realizala sin ayuda</span></div>
-      <h2 className="text-xl font-black text-white">{task.title}</h2>
-      <p className="mt-2 text-sm leading-relaxed text-slate-300">{task.description}</p>
-      <button onClick={completeTask} className="mt-4 h-12 w-full rounded-2xl bg-gradient-to-r from-[#7c4dff] to-[#18d4ef] font-black text-white">Tarea completada, continuar</button>
-    </div>}
+      <h2 className="mt-3 text-3xl font-black text-white md:text-4xl">Gracias por completar las 8 tareas</h2>
+      <div className="mt-7 grid grid-cols-2 gap-3 sm:grid-cols-4">{durations.map((seconds, index) => <div key={index} className="rounded-2xl bg-white/[0.055] p-3"><p className="text-xs text-slate-500">Tarea {index + 1}</p><p className="mt-1 text-xl font-black text-white">{seconds}s</p></div>)}</div>
+      <p className="mt-7 text-slate-400">Cerrá esta ventana y volvé a Maze para finalizar la sesión.</p>
+    </div>
+  </div>;
+
+  if (phase === "intro") return <div className="fixed inset-0 z-[100] grid place-items-center overflow-y-auto bg-[#080910] p-5">
+    <div className="w-full max-w-2xl rounded-[32px] border border-[#8f63ff]/35 bg-[#101118] p-6 shadow-2xl md:p-10">
+      <div className="mb-7 flex items-center justify-between gap-3">
+        <span className="rounded-full bg-[#7c4dff]/20 px-4 py-2 text-sm font-black text-[#c4b1ff]">Tarea {taskIndex + 1} de {usabilityTasks.length}</span>
+        <span className="text-sm font-bold text-slate-500">Realizala sin ayuda</span>
+      </div>
+      <h2 className="text-3xl font-black leading-tight text-white md:text-5xl">{task.title}</h2>
+      <p className="mt-5 text-lg leading-relaxed text-slate-300">{task.description}</p>
+      <button onClick={startTask} className="mt-8 h-14 w-full rounded-2xl bg-gradient-to-r from-[#7c4dff] to-[#18d4ef] text-lg font-black text-white">Comenzar tarea</button>
+    </div>
+  </div>;
+
+  return <aside className="fixed inset-x-3 bottom-3 z-[80] rounded-2xl border border-[#8f63ff]/45 bg-[#101118]/95 p-3 shadow-2xl shadow-black/60 backdrop-blur-xl sm:inset-x-auto sm:bottom-5 sm:right-5 sm:w-[400px] sm:rounded-3xl sm:p-5">
+    <div className="flex items-center justify-between gap-3">
+      <div className="min-w-0">
+        <p className="text-xs font-black text-[#c4b1ff]">Tarea {taskIndex + 1} de {usabilityTasks.length}</p>
+        <h2 className="truncate font-black text-white">{task.title}</h2>
+      </div>
+      <button onClick={completeTask} className="shrink-0 rounded-xl bg-gradient-to-r from-[#7c4dff] to-[#18d4ef] px-4 py-3 text-sm font-black text-white">Completar</button>
+    </div>
   </aside>;
 }
 
